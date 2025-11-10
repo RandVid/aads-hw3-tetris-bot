@@ -2,15 +2,19 @@
 function evaluateBoard(board) {
     let aggregateHeight = 0;
     let completeLines = 0;
-    let holes = 0;
+    let maxHeight = 0;
+    let minHeight = ny;
+    let holes = 1;
     let bumpiness = 0;
     let columnHeights = new Array(nx).fill(0);
 
     // Calculate aggregate height and column heights
-    for (let y = 0; y < ny; y++) {
+    for (let y =   0; y < ny; y++) {
         for (let x = 0; x < nx; x++) {
-            if (board[x][y] !== 0) {
-                columnHeights[x] = ny - y;
+            if (board[x][y] !== 0 && board[x][y] !== null) {
+                columnHeights[x] = 2 ** (ny - y);
+                if (columnHeights[x] > maxHeight) maxHeight = columnHeights[x];
+                if (columnHeights[x] < minHeight) minHeight = columnHeights[x];
                 aggregateHeight += columnHeights[x];
                 break;
             }
@@ -21,12 +25,14 @@ function evaluateBoard(board) {
     for (let y = 0; y < ny; y++) {
         var complete = true;
         for (let x = 0; x < nx; x++) {
-            if (board[x][y] === 0) {
+            if (board[x][y] === 0 || board[x][y] === null) {
                 complete = false;
                 break;
             }
         }
         if (complete)
+            // if (completeLines === 0) completeLines++;
+            // else completeLines *= 2;
             completeLines++;
     }
 
@@ -34,9 +40,10 @@ function evaluateBoard(board) {
     for (let x = 0; x < nx; x++) {
         let blockFound = false;
         for (let y = 0; y < ny; y++) {
-            if (board[x][y] !== 0) {
+            if (board[x][y] !== 0 && board[x][y] !== null) {
                 blockFound = true;
-            } else if (blockFound && board[x][y] === 0) {
+            } else if (blockFound && (board[x][y] === 0 || board[x][y] === null)) {
+                // holes *= 1.5;
                 holes++;
             }
         }
@@ -44,11 +51,20 @@ function evaluateBoard(board) {
 
     // Calculate bumpiness
     for (let x = 0; x < nx - 1; x++) {
-        bumpiness += Math.abs(columnHeights[x] - columnHeights[x + 1]);
+        bumpiness += Math.abs(columnHeights[x] - columnHeights[x + 1] );
     }
 
+    console.log(aggregateHeight - 10 * completeLines)
+
     // Combine features into a heuristic score
-    return -0.51 * aggregateHeight + 0.76 * completeLines - 0.36 * holes - 0.18 * bumpiness;
+    return 0
+        - 0.51 * (aggregateHeight - 10 * completeLines)
+        + 5.76 * (2 ** (completeLines - 1))
+        - 1000.36 * holes
+        - 1.18 * bumpiness
+        - 5.3 * maxHeight
+        + 3.2 * (2 - maxHeight + minHeight)
+        ;
 }
 
 // Function to deep copy the blocks array
@@ -63,20 +79,33 @@ function copyBlocks(blocks) {
     return new_blocks;
 }
 
+function in_bounds(type, x, y, dir) {
+    var result = true
+    eachblock(type, x, y, dir, function(x, y) {
+        if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny))
+            result = false;
+    });
+    return result;
+}
+
 // Generate all possible moves for the current piece
 function getPossibleMoves(piece) {
     let moves = [];
     // For each rotation of the piece
     for (let dir = 0; dir < 4; dir++) {
-        piece.dir = dir;
         // For each horizontal position
-        for (let x = 0; x < nx - piece.type.size; x++) {
-            let y = getDropPosition(piece, x);
+        for (let x = -1; x < nx; x++) {
+            if (!in_bounds(piece.type, x, 5, dir)) continue;
+            let y = getDropPosition(piece.type, x, dir);
+            if (y < 3) {
+                console.log("blocked", x, y);
+            }
             let new_blocks = copyBlocks(blocks);
-            eachblock(piece.type, x, y, piece.dir, function(x, y) {
-                new_blocks[x][y] = piece.type;
+            if (occupied(piece.type, x, y, dir)) continue;
+            eachblock(piece.type, x, y, dir, function(ix, iy) {
+                new_blocks[ix][iy] = piece.type;
             });
-            moves.push({piece: piece, x: x, y: y, board: new_blocks});
+            moves.push({type: piece.type, dir: dir, x: x, y: y, board: new_blocks});
         }
     }
     return moves;
@@ -89,18 +118,21 @@ function selectBestMove(piece, board) {
     let bestScore = -Infinity;
     moves.forEach(move => {
         let score = evaluateBoard(move.board);
+        console.log("board", move.board);
+        console.log("score", score);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
+            console.log("best move", move.x, move.y, move.dir, score);
         }
     });
     return bestMove;
 }
 
 // Function to get the drop position of the piece
-function getDropPosition(piece, x) {
+function getDropPosition(type, x, dir) {
     let y = 0;
-    while (!occupied(piece.type, x, y + 1, piece.dir)) {
+    while (!occupied(type, x, y + 1, dir)) {
         y++;
     }
     return y;

@@ -412,10 +412,10 @@
     function agent() {
         let bestMove = selectBestMove(current);
         if (bestMove) {
-            let dropY = getDropPosition(bestMove.piece, bestMove.x);
+            let dropY = getDropPosition(bestMove.type, bestMove.x, bestMove.dir);
             current.x = bestMove.x;
             current.y = dropY;
-            current.dir = bestMove.piece.dir;
+            current.dir = bestMove.dir;
             drop();
         }
     }
