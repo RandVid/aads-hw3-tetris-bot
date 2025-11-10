@@ -106,10 +106,10 @@
     //-----------------------------------------------------
     // check if a piece can fit into a position in the grid
     //-----------------------------------------------------
-    function occupied(type, x, y, dir) {
+    function occupied(type, x, y, dir, board=blocks) {
         var result = false
         eachblock(type, x, y, dir, function(x, y) {
-            if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y))
+            if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y, board))
                 result = true;
         });
         return result;
@@ -214,7 +214,7 @@
     function clearRows()            { setRows(0); }
     function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*rows)); invalidateRows(); }
     function addRows(n)             { setRows(rows + n); }
-    function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
+    function getBlock(x,y, board=blocks)          { return (board && board[x] ? board[x][y] : null); }
     function setBlock(x,y,type)     { blocks[x] = blocks[x] || []; blocks[x][y] = type; invalidate(); }
     function clearBlocks()          { blocks = initializeBoard(nx, ny); invalidate(); }
     function clearActions()         { actions = []; }
@@ -290,6 +290,7 @@
             clearActions();
             if (occupied(current.type, current.x, current.y, current.dir)) {
                 lose();
+                console.log(score, rows);
             }
         }
     }
@@ -410,7 +411,7 @@
     }
 
     function agent() {
-        let bestMove = selectBestMove(current);
+        let bestMove = selectBestMove(current, next);
         if (bestMove) {
             let dropY = getDropPosition(bestMove.type, bestMove.x, bestMove.dir);
             current.x = bestMove.x;

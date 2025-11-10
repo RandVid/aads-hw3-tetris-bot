@@ -54,7 +54,7 @@ function evaluateBoard(board) {
         bumpiness += Math.abs(columnHeights[x] - columnHeights[x + 1] );
     }
 
-    console.log(aggregateHeight - 10 * completeLines)
+    // console.log(aggregateHeight - 10 * completeLines)
 
     // Combine features into a heuristic score
     return 0
@@ -63,7 +63,7 @@ function evaluateBoard(board) {
         - 1000.36 * holes
         - 1.18 * bumpiness
         - 5.3 * maxHeight
-        + 3.2 * (2 - maxHeight + minHeight)
+        + 3.2 * (1 - maxHeight + minHeight)
         ;
 }
 
@@ -89,19 +89,19 @@ function in_bounds(type, x, y, dir) {
 }
 
 // Generate all possible moves for the current piece
-function getPossibleMoves(piece) {
+function getPossibleMoves(piece, board=blocks) {
     let moves = [];
     // For each rotation of the piece
     for (let dir = 0; dir < 4; dir++) {
         // For each horizontal position
         for (let x = -1; x < nx; x++) {
             if (!in_bounds(piece.type, x, 5, dir)) continue;
-            let y = getDropPosition(piece.type, x, dir);
+            let y = getDropPosition(piece.type, x, dir, board);
             if (y < 3) {
-                console.log("blocked", x, y);
+                // console.log("blocked", x, y);
             }
-            let new_blocks = copyBlocks(blocks);
-            if (occupied(piece.type, x, y, dir)) continue;
+            let new_blocks = copyBlocks(board);
+            if (occupied(piece.type, x, y, dir, board)) continue;
             eachblock(piece.type, x, y, dir, function(ix, iy) {
                 new_blocks[ix][iy] = piece.type;
             });
@@ -112,27 +112,39 @@ function getPossibleMoves(piece) {
 }
 
 // Select the best move based on heuristic evaluation
-function selectBestMove(piece, board) {
+function selectBestMove(piece, next, board) {
     let moves = getPossibleMoves(piece);
+    let moves2 = []
+    for (let i = 0; i < moves.length; i++) {
+        let moves_temp = getPossibleMoves(next, moves[i].board);
+        for (let j = 0; j < moves_temp.length; j++) {
+            moves2.push({type: moves[i].type,
+                dir: moves[i].dir,
+                x: moves[i].x,
+                y: moves[i].y,
+                board: moves_temp[j].board
+            });
+        }
+    }
     let bestMove = null;
     let bestScore = -Infinity;
-    moves.forEach(move => {
+    moves2.forEach(move => {
         let score = evaluateBoard(move.board);
-        console.log("board", move.board);
-        console.log("score", score);
+        // console.log("board", move.board);
+        // console.log("score", score);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
-            console.log("best move", move.x, move.y, move.dir, score);
+            // console.log("best move", move.x, move.y, move.dir, score);
         }
     });
     return bestMove;
 }
 
 // Function to get the drop position of the piece
-function getDropPosition(type, x, dir) {
+function getDropPosition(type, x, dir, board=blocks) {
     let y = 0;
-    while (!occupied(type, x, y + 1, dir)) {
+    while (!occupied(type, x, y + 1, dir, board)) {
         y++;
     }
     return y;
