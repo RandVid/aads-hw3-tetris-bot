@@ -290,6 +290,7 @@
             clearActions();
             if (occupied(current.type, current.x, current.y, current.dir)) {
                 lose();
+                console.log(score, rows);
             }
         }
     }

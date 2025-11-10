@@ -54,7 +54,7 @@ function evaluateBoard(board) {
         bumpiness += Math.abs(columnHeights[x] - columnHeights[x + 1] );
     }
 
-    console.log(aggregateHeight - 10 * completeLines)
+    // console.log(aggregateHeight - 10 * completeLines)
 
     // Combine features into a heuristic score
     return 0
@@ -98,7 +98,7 @@ function getPossibleMoves(piece) {
             if (!in_bounds(piece.type, x, 5, dir)) continue;
             let y = getDropPosition(piece.type, x, dir);
             if (y < 3) {
-                console.log("blocked", x, y);
+                // console.log("blocked", x, y);
             }
             let new_blocks = copyBlocks(blocks);
             if (occupied(piece.type, x, y, dir)) continue;
@@ -118,12 +118,12 @@ function selectBestMove(piece, board) {
     let bestScore = -Infinity;
     moves.forEach(move => {
         let score = evaluateBoard(move.board);
-        console.log("board", move.board);
-        console.log("score", score);
+        // console.log("board", move.board);
+        // console.log("score", score);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
-            console.log("best move", move.x, move.y, move.dir, score);
+            // console.log("best move", move.x, move.y, move.dir, score);
         }
     });
     return bestMove;
