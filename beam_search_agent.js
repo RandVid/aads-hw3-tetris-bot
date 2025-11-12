@@ -78,7 +78,7 @@ function evaluateBoard(board) {
         // - 0.51 * (aggregateHeight - (1.5 ** completeLines))
         - 0.51 * (aggregateHeight - (8 * completeLines))
         + 0.76 * (2 ** (completeLines))
-        - 1.36 * holes * maxHeight
+        - 1.06 * holes * maxHeight
         - 0.18 * bumpiness
         - 0.1 * (wellSum)
         // - 5.3 * maxHeight
@@ -130,34 +130,78 @@ function getPossibleMoves(piece, board=blocks) {
     return moves;
 }
 
-// Select the best move based on heuristic evaluation
-function selectBestMove(piece, next, board) {
-    let moves = getPossibleMoves(piece);
-    let moves2 = []
-    for (let i = 0; i < moves.length; i++) {
-        let moves_temp = getPossibleMoves(next, moves[i].board);
-        for (let j = 0; j < moves_temp.length; j++) {
-            moves2.push({type: moves[i].type,
-                dir: moves[i].dir,
-                x: moves[i].x,
-                y: moves[i].y,
-                board: moves_temp[j].board
+function expectedNextUnknown(board) {
+    const types = [i, j, l, o, s, t, z];
+    let sum = 0, n = 0;
+
+    for (const typ of types) {
+        const dummy = { type: typ, dir: 0, x: 0, y: 0 };
+        const ms = getPossibleMoves(dummy, board);
+        if (!ms.length) continue;
+
+        let best = -Infinity;
+        for (const m of ms) {
+            const s = evaluateBoard(m.board);
+            if (s > best) best = s;
+        }
+        sum += best;
+        n++;
+    }
+    return n ? (sum / n) : -1e9;
+}
+
+const BEAM_WIDTH = 12;
+const EXPECT_WEIGHT = 0.25;
+
+function selectBestMove(piece, next, board = blocks) {
+    const firstMoves = getPossibleMoves(piece, board);
+    if (!firstMoves.length) return null;
+
+    let beam = firstMoves
+        .map(m => ({
+            first: { type: piece.type, dir: m.dir, x: m.x, y: m.y },
+            board: m.board,
+            score0: evaluateBoard(m.board)
+        }))
+        .sort((a, b) => b.score0 - a.score0)
+        .slice(0, Math.min(BEAM_WIDTH, firstMoves.length));
+
+    let expanded = [];
+    for (const state of beam) {
+        const nextMoves = getPossibleMoves(next, state.board);
+        if (!nextMoves.length) {
+            expanded.push({ ...state, score1: state.score0, boardAfterNext: state.board });
+            continue;
+        }
+        for (const nm of nextMoves) {
+            expanded.push({
+                first: state.first,
+                board: nm.board,
+                boardAfterNext: nm.board,
+                score0: state.score0,
+                score1: evaluateBoard(nm.board)
             });
         }
     }
-    let bestMove = null;
-    let bestScore = -Infinity;
-    moves2.forEach(move => {
-        let score = evaluateBoard(move.board);
-        // console.log("board", move.board);
-        // console.log("score", score);
-        if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
-            // console.log("best move", move.x, move.y, move.dir, score);
-        }
-    });
-    return bestMove;
+
+    expanded.sort((a, b) => b.score1 - a.score1);
+    let beam2 = expanded.slice(0, Math.min(BEAM_WIDTH, expanded.length));
+
+    for (const s of beam2) {
+        s.expect = expectedNextUnknown(s.boardAfterNext);
+        s.total  = s.score1 + EXPECT_WEIGHT * s.expect;
+    }
+
+    beam2.sort((a, b) => b.total - a.total);
+    const best = beam2[0] || beam[0];
+
+    return {
+        type: best.first.type,
+        dir:  best.first.dir,
+        x:    best.first.x,
+        y:    best.first.y,
+        board: best.boardAfterNext || best.board
+    };
 }
 
 // Function to get the drop position of the piece
