@@ -14,7 +14,6 @@ function evaluateBoard(board) {
         for (let y = 0; y < ny; y++) {
             if (board[x][y] !== 0 && board[x][y] !== null) {
                 columnHeights[x] = ny - y;
-                // columnHeights[x] = 2.1**(ny - y);
                 if (columnHeights[x] > maxHeight) maxHeight = columnHeights[x];
                 if (columnHeights[x] < minHeight) minHeight = columnHeights[x];
                 aggregateHeight += columnHeights[x];
@@ -34,8 +33,6 @@ function evaluateBoard(board) {
             }
         }
         if (complete)
-            // if (completeLines === 0) completeLines++;
-            // else completeLines *= 2;
             completeLines++;
     }
 
@@ -71,8 +68,6 @@ function evaluateBoard(board) {
         wellSum += (wellDepth * (wellDepth + 1)) / 2;
     }
 
-    // console.log(aggregateHeight)
-
     // Combine features into a heuristic score
     return 0
         // - 0.51 * (aggregateHeight - (1.5 ** completeLines))
@@ -81,7 +76,5 @@ function evaluateBoard(board) {
         - 0.36 * holes * maxHeight
         - 0.18 * bumpiness
         - 0.1 * (wellSum)
-        // - 5.3 * maxHeight
-        // - 5.2 *  (maxHeight / minHeight)
-        ;
+    ;
 }

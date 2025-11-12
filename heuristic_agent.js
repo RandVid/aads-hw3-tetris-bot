@@ -28,9 +28,6 @@ function getPossibleMoves(piece) {
         for (let x = -1; x < nx; x++) {
             if (!in_bounds(piece.type, x, 5, dir)) continue;
             let y = getDropPosition(piece.type, x, dir);
-            if (y < 3) {
-                // console.log("blocked", x, y);
-            }
             let new_blocks = copyBlocks(blocks);
             if (occupied(piece.type, x, y, dir)) continue;
             eachblock(piece.type, x, y, dir, function(ix, iy) {
@@ -49,12 +46,9 @@ function selectBestMove(piece, board) {
     let bestScore = -Infinity;
     moves.forEach(move => {
         let score = evaluateBoard(move.board);
-        // console.log("board", move.board);
-        // console.log("score", score);
         if (score > bestScore) {
             bestScore = score;
             bestMove = move;
-            // console.log("best move", move.x, move.y, move.dir, score);
         }
     });
     return bestMove;
