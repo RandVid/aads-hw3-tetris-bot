@@ -76,12 +76,12 @@ function evaluateBoard(board) {
     // Combine features into a heuristic score
     return 0
         // - 0.51 * (aggregateHeight - (1.5 ** completeLines))
-        - 0.51 * (aggregateHeight - (4 * completeLines))
-        + 0.4 * (2 ** (completeLines))
-        - 3.6 * holes * maxHeight
+        - 0.51 * (aggregateHeight - (8 * completeLines))
+        + 0.76 * (2 ** (completeLines))
+        - 1.36 * holes * maxHeight
         - 0.18 * bumpiness
-        - 0.4 * (wellSum)
-        // - 1.3 * maxHeight
+        - 0.1 * (wellSum)
+        // - 5.3 * maxHeight
         // - 5.2 *  (maxHeight / minHeight)
         ;
 }
