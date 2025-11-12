@@ -10,8 +10,8 @@ function evaluateBoard(board) {
     let wellSum = 0;
 
     // Calculate aggregate height and column heights
-    for (let y =   0; y < ny; y++) {
-        for (let x = 0; x < nx; x++) {
+    for (let x =   0; x < nx; x++) {
+        for (let y = 0; y < ny; y++) {
             if (board[x][y] !== 0 && board[x][y] !== null) {
                 columnHeights[x] = ny - y;
                 // columnHeights[x] = 2.1**(ny - y);
