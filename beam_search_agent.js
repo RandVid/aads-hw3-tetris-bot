@@ -78,7 +78,7 @@ function evaluateBoard(board) {
         // - 0.51 * (aggregateHeight - (1.5 ** completeLines))
         - 0.51 * (aggregateHeight - (8 * completeLines))
         + 0.76 * (2 ** (completeLines))
-        - 1.06 * holes * maxHeight
+        - 0.36 * holes * maxHeight
         - 0.18 * bumpiness
         - 0.1 * (wellSum)
         // - 5.3 * maxHeight
